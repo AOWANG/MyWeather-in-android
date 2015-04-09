@@ -1,0 +1,66 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <RelativeLayout
+        android:id="@+id/city_list_navigation"
+        android:layout_width="fill_parent"
+        android:layout_height="45dp"
+        android:background="#ffcd2626">
+
+        <TextView
+            android:id="@+id/title_name"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:gravity="center"
+            android:text="当前城市：北京"
+            android:textColor="#ffffff"
+            android:textSize="20dp"/>
+
+        <ImageView
+            android:id="@+id/title_back"
+            android:layout_width="45dip"
+            android:layout_height="45dip"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:src="@drawable/base_action_bar_back_normal"/>
+
+        <ImageView
+            android:layout_width="1dp"
+            android:layout_height="40dp"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@id/title_back"
+            android:background="#A71717"
+            android:gravity="center"/>
+        </RelativeLayout>
+
+        <EditText
+            android:id="@+id/search_editText"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/city_list_navigation"
+            android:hint="北京/beijing/bj"
+            android:layout_margin="10dp"
+            android:drawableLeft="@drawable/magnifying_glass"
+            android:drawablePadding="8.0dp"
+
+            android:paddingBottom="8.0dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="30dp"
+            android:paddingTop="8dp"
+            android:background="@drawable/contact_search_box_edittext_keyword_background"
+
+            android:textColor="#ff000000"
+            android:textColorHint="#ffcccccc"
+            android:textSize="15sp"
+            android:singleLine="true"/>
+
+    <ListView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/city_list"
+        android:layout_below="@id/search_editText">
+
+        </ListView>
+</RelativeLayout>

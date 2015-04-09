@@ -1,0 +1,3 @@
+configurations.create("default")
+artifacts.add("default", file('jackson-core-2.5.0.jar'))
+
