@@ -15,7 +15,7 @@ public class ParseXMLWithPull {
 
     public static ArrayList<DayWeatherInformation> weekWeatherInformation = new ArrayList<DayWeatherInformation>(DAYS_OF_WEATHER_INFORMATION);
 
-    public static void parseWeatherInformation(String xmlData) {
+    public static Boolean parseWeatherInformation(String xmlData) {
         weekWeatherInformation.clear();
         try {
             XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
@@ -125,6 +125,10 @@ public class ParseXMLWithPull {
                             eventType = xpp.next();
                             eventType = xpp.next();
                         }
+                    }else if(xpp.getName().equals("error")){
+                        //error
+                        return false;
+
                     }
                 } else if(eventType == XmlPullParser.END_TAG) {
 //                    System.out.println("End tag "+xpp.getName());
@@ -137,6 +141,8 @@ public class ParseXMLWithPull {
         } catch (Exception exception) {
             exception.printStackTrace();
         }
+
+        return true;
     }
 
     private static void parseSevenDaysWeatherInformation(){

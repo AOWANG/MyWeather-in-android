@@ -44,8 +44,11 @@ public class MainActivity extends Activity {
                 case MSG_UPDATE_WEATHER_WITH_XML:
                     Log.e("myWeather", "update UI weather interface with xml");
 
-                    ParseXMLWithPull.parseWeatherInformation(msg.obj.toString());
-                    UpdateWeatherUIByXMLInformation();
+                    if(ParseXMLWithPull.parseWeatherInformation(msg.obj.toString())){
+                        UpdateWeatherUIByXMLInformation();
+                    }else {
+                        Toast.makeText(MainActivity.this,"sorry,no data about this city",Toast.LENGTH_SHORT).show();
+                    }
 
                     break;
                 case MSG_FAILURE:
