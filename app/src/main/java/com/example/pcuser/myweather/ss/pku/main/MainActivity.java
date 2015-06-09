@@ -51,13 +51,13 @@ public class MainActivity extends Activity {
                     if (ParseXMLWithPull.parseWeatherInformation(msg.obj.toString())) {
                         UpdateWeatherUIByXMLInformation();
                     } else {
-                        Toast.makeText(MainActivity.this, "sorry,no data about this city", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, getString(R.string.no_weather_info), Toast.LENGTH_SHORT).show();
                     }
 
                     break;
                 case MSG_FAILURE:
                     Log.e("myWeather", "failure");
-                    Toast.makeText(MainActivity.this, "there is no net", Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this, getString(R.string.no_network), Toast.LENGTH_LONG).show();
                     break;
 
                 default:
@@ -104,7 +104,7 @@ public class MainActivity extends Activity {
 
 
         if (NetUtil.getNetConnectionState(MainActivity.this) == NetUtil.NET_CONNECTION_NONE) {
-            Toast.makeText(MainActivity.this, "no net", Toast.LENGTH_SHORT).show();
+            Toast.makeText(MainActivity.this, getString(R.string.no_network), Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -326,19 +326,19 @@ public class MainActivity extends Activity {
         todayDetailInformation = ParseXMLWithPull.todayDetail;
         if (todayDetailInformation.pm25 == null) {
             todayDetailInformation.pm25 = "100";
-            todayDetailInformation.quality = "no data";
+            todayDetailInformation.quality = getString(R.string.no_data);
         }
         city_name.setText(todayDetailInformation.city);
-        currentWendu.setText("温度:" + todayDetailInformation.wendu + "℃");
-        title_city_name.setText(todayDetailInformation.city + "天气");
-        issue_time.setText("今天" + todayDetailInformation.updateTime + "发布");
-        humidity.setText("湿度:" + todayDetailInformation.shidu);
+        currentWendu.setText(getString(R.string.today_temperature) + todayDetailInformation.wendu + "℃");
+        title_city_name.setText(todayDetailInformation.city + getString(R.string.title_city_name));
+        issue_time.setText(todayDetailInformation.updateTime + getString(R.string.issue_time));
+        humidity.setText(getString(R.string.humidity) + todayDetailInformation.shidu);
         pm25_value.setText(todayDetailInformation.pm25);
         air_quality.setText(todayDetailInformation.quality);
 
         todayWeatherInformation = ParseXMLWithPull.weekWeatherInformation.get(0);
 
-        today_week_number.setText("今天 " + DateMethodUtil.getTodayWeekNumber());
+        today_week_number.setText( DateMethodUtil.getTodayWeekNumber());
 
         today_temperature.setText(todayWeatherInformation.getLow() + "~" + todayWeatherInformation.getHigh());
         today_weather.setText(todayWeatherInformation.nightType);
@@ -377,14 +377,14 @@ public class MainActivity extends Activity {
             typeId = (int) value;
 
             if (!isFromLocal)
-                Toast.makeText(MainActivity.this, "更新成功", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, getString(R.string.update_succeed), Toast.LENGTH_SHORT).show();
         } catch (Exception e) { //e.printStackTrace();
             if (-1 == typeId)
                 typeId = R.drawable.biz_plugin_weather_qing;
             if (-1 == pmImgId)
                 pmImgId = R.drawable.biz_plugin_weather_0_50;
             if (!isFromLocal)
-                Toast.makeText(MainActivity.this, "no picture for this weather", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, getString(R.string.no_picture), Toast.LENGTH_SHORT).show();
         } finally {
             Drawable drawable = getResources().getDrawable(typeId);
             weather_pic.setImageDrawable(drawable);

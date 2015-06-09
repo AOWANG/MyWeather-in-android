@@ -149,7 +149,7 @@ public class CityListActivity extends Activity {
         titleNameText = (TextView) findViewById(R.id.title_name);
         Intent intent = this.getIntent();
         String name = intent.getStringExtra("cityName");
-        titleNameText.setText("当前区域： " + name);
+        titleNameText.setText(getString(R.string.title_name) + name);
     }
 
     private void initCityList() {

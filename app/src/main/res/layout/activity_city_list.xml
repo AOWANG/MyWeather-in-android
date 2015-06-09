@@ -13,7 +13,7 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:gravity="center"
-            android:text="当前城市：北京"
+            android:text="@string/default_title_name"
             android:textColor="#ffffff"
             android:textSize="20dp" />
 
@@ -39,7 +39,7 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/city_list_navigation"
-        android:hint="北京/beijing/bj"
+        android:hint="@string/search_editText"
         android:layout_margin="10dp"
         android:drawableLeft="@drawable/magnifying_glass"
         android:drawablePadding="8.0dp"
