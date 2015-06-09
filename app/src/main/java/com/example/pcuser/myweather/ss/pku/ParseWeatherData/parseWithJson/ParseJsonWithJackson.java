@@ -3,7 +3,6 @@ package com.example.pcuser.myweather.ss.pku.parseWeatherData.parseWithJson;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Created by pcuser on 15/3/24.
@@ -11,14 +10,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class ParseJsonWithJackson {
     public static WeatherBean weatherBean;//= new WeatherBean();
 
-    public static void parseWeatherInformation(String json){
+    public static void parseWeatherInformation(String json) {
         JsonFactory factory = new JsonFactory();
 
-        try{
+        try {
             JsonParser jsonParser = factory.createJsonParser(json);
-            while (jsonParser.nextToken() != JsonToken.END_OBJECT){
+            while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
                 String fieldname = jsonParser.getCurrentName();
-                switch (fieldname){
+                switch (fieldname) {
                     case "city":
                         weatherBean.city = jsonParser.getText();
                         break;
@@ -117,7 +116,7 @@ public class ParseJsonWithJackson {
             }
 
 
-        }catch (Exception exception){
+        } catch (Exception exception) {
             exception.printStackTrace();
         }
     }

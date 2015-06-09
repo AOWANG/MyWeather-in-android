@@ -30,4 +30,5 @@ dependencies {
     compile project(':jackson-core-2.5.0')
     compile project(':jackson-databind-2.3.1')
     compile project(':pinyin4j-2.5.0')
+    compile files('libs/BaiduLBS_Android.jar')
 }

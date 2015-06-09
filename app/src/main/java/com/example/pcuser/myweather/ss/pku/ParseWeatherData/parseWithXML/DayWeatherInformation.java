@@ -14,8 +14,7 @@ public class DayWeatherInformation {
     public String nightFengxiang;
     public String nightFengli;
 
-
-    public String getDate(){
+    public String getDate() {
         return date;
     }
 
@@ -24,15 +23,15 @@ public class DayWeatherInformation {
         return low.substring(low.indexOf(" ") + 1);
     }
 
-    public String getHigh(){
+    public String getHigh() {
         return high.substring(high.indexOf(" ") + 1);
     }
 
     public String getDayFengli() {
-        return dayFengli.substring(0,dayFengli.length() - 1);
+        return dayFengli.substring(0, dayFengli.length() - 1);
     }
 
     public String getNightFengli() {
-        return nightFengli.substring(0,nightFengli.length() - 1);
+        return nightFengli.substring(0, nightFengli.length() - 1);
     }
 }

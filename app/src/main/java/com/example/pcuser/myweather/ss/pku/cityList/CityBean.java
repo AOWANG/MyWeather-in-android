@@ -11,7 +11,7 @@ public class CityBean {
     private String allPY;
     private String allFirstPY;
 
-    public CityBean(String province,String city,String number,String firstPY,String allPY,String allFirstPY){
+    public CityBean(String province, String city, String number, String firstPY, String allPY, String allFirstPY) {
         this.province = province;
         this.city = city;
         this.number = number;
@@ -20,22 +20,21 @@ public class CityBean {
         this.allFirstPY = allFirstPY;
     }
 
-    public String getCity(){
+    public String getCity() {
         return this.city;
     }
 
-    public String getProvince(){
-           return this.province;
+    public String getProvince() {
+        return this.province;
     }
 
     public String getAllPY() {
         return this.allPY;
     }
 
-    public String getAllFirstPY(){
-        return  this.allFirstPY;
+    public String getAllFirstPY() {
+        return this.allFirstPY;
     }
-
 
 
 }

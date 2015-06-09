@@ -2,11 +2,10 @@ package com.example.pcuser.myweather.ss.pku.cityList;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Color;
+import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -35,20 +34,20 @@ public class CityListActivity extends Activity {
     private static final int MSG_HANDLE_SEARCH = 1;
     private static final int MSG_FAILURE = 10;
 
-    private Handler handler = new Handler(){
+    private Handler handler = new Handler() {
         @Override
-        public void handleMessage(Message msg){
-            switch (msg.what){
-                case  MSG_HANDLE_CITYDB_FINISH:
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MSG_HANDLE_CITYDB_FINISH:
                     ArrayAdapter<String> adapter = new ArrayAdapter<String>(CityListActivity.this,
-                            android.R.layout.simple_list_item_1,cityNameList);
+                            android.R.layout.simple_list_item_1, cityNameList);
                     cityListView.setAdapter(adapter);
                     cityListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                         @Override
                         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                             String cityId = cityDB.getCityIDByIndex(position + 1);
-                            Intent intent = new Intent(CityListActivity.this,MainActivity.class);
-                            intent.putExtra("cityID",cityId);
+                            Intent intent = new Intent(CityListActivity.this, MainActivity.class);
+                            intent.putExtra("cityID", cityId);
                             startActivity(intent);
                         }
                     });
@@ -56,27 +55,27 @@ public class CityListActivity extends Activity {
                     break;
                 case MSG_HANDLE_SEARCH:
 
-                        ArrayAdapter<String> adapter2 = new ArrayAdapter<String>(CityListActivity.this,
-                                android.R.layout.simple_list_item_1, cityNameListUsedBySearch);
-                        cityListView.setAdapter(adapter2);
-                        cityListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                            @Override
-                            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                                String cityName = cityNameListUsedBySearch.get(position);
-                                String cityId = cityDB.getCityIDByCityName(cityName);
-                                Intent intent = new Intent(CityListActivity.this, MainActivity.class);
-                                intent.putExtra("cityID", cityId);
-                                startActivity(intent);
-                            }
-                        });
+                    ArrayAdapter<String> adapter2 = new ArrayAdapter<String>(CityListActivity.this,
+                            android.R.layout.simple_list_item_1, cityNameListUsedBySearch);
+                    cityListView.setAdapter(adapter2);
+                    cityListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                        @Override
+                        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                            String cityName = cityNameListUsedBySearch.get(position);
+                            String cityId = cityDB.getCityIDByCityName(cityName);
+                            Intent intent = new Intent(CityListActivity.this, MainActivity.class);
+                            intent.putExtra("cityID", cityId);
+                            startActivity(intent);
+                        }
+                    });
 
                 case MSG_FAILURE:
-                    Log.e("myWeather","failure");
-                   // Toast.makeText(CityListActivity.this, "error", Toast.LENGTH_LONG).show();
+                    Log.e("myWeather", "failure");
+                    // Toast.makeText(CityListActivity.this, "error", Toast.LENGTH_LONG).show();
                     break;
 
                 default:
-                    Log.e("myWeather","default");
+                    Log.e("myWeather", "default");
             }
         }
     };
@@ -91,19 +90,20 @@ public class CityListActivity extends Activity {
     private List<String> cityNameList;
 
     private List<String> cityNameListUsedBySearch;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_city_list);
 
-        cityListView = (ListView)findViewById(R.id.city_list);
+        cityListView = (ListView) findViewById(R.id.city_list);
 //        cityListView.setBackgroundColor(Color.argb(255,244,238,235));
-        if (cityDB ==null) {
+        if (cityDB == null) {
             cityDB = openCityDB();
             initCityList();
         }
 
-        back_btn = (ImageView)findViewById(R.id.title_back);
+        back_btn = (ImageView) findViewById(R.id.title_back);
         back_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -113,7 +113,7 @@ public class CityListActivity extends Activity {
         });
 
 
-        search_editText = (EditText)findViewById(R.id.search_editText);
+        search_editText = (EditText) findViewById(R.id.search_editText);
         cityNameListUsedBySearch = new ArrayList<String>();
         search_editText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -146,13 +146,13 @@ public class CityListActivity extends Activity {
             }
         });
 
-        titleNameText = (TextView)findViewById(R.id.title_name);
+        titleNameText = (TextView) findViewById(R.id.title_name);
         Intent intent = this.getIntent();
         String name = intent.getStringExtra("cityName");
         titleNameText.setText("当前区域： " + name);
     }
 
-    private void initCityList(){
+    private void initCityList() {
         cityList = new ArrayList<CityBean>();
         new Thread(new Runnable() {
             @Override
@@ -163,11 +163,11 @@ public class CityListActivity extends Activity {
         }).start();
     }
 
-    private boolean prepareCityList(){
+    private boolean prepareCityList() {
         cityNameList = new ArrayList<String>();
 
         cityList = cityDB.getAllCity();
-        for (CityBean cityBean:cityList){
+        for (CityBean cityBean : cityList) {
             String cityName = cityBean.getCity();
             cityNameList.add(cityName);
         }
@@ -179,36 +179,35 @@ public class CityListActivity extends Activity {
         return true;
     }
 
-    private CityDB openCityDB(){
+    private CityDB openCityDB() {
         String databasePathBase = "/data" +
                 Environment.getDataDirectory().getAbsolutePath()
                 + File.separator + getPackageName()
                 + File.separator + "databases";
 
-        String databasePathCity = databasePathBase+File.separator+CityDB.CITY_DB_NAME;
+        String databasePathCity = databasePathBase + File.separator + CityDB.CITY_DB_NAME;
         File dbPath = new File(databasePathBase);
         File db = new File(databasePathCity);
-        if(!dbPath.exists())
-        {
+        if (!dbPath.exists()) {
             dbPath.mkdir();
         }
-        if (!db.exists()){
-            try{
+        if (!db.exists()) {
+            try {
                 InputStream is = getAssets().open("city.db");
                 FileOutputStream fos = new FileOutputStream(db);
                 int len = -1;
                 byte[] buffer = new byte[1024];
-                while ((len = is.read(buffer))!= -1){
-                    fos.write(buffer, 0 , len);
+                while ((len = is.read(buffer)) != -1) {
+                    fos.write(buffer, 0, len);
                     fos.flush();
                 }
                 fos.close();
                 is.close();
-            }catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
-        return  new CityDB(this, databasePathCity);
+        return new CityDB(this, databasePathCity);
     }
 }
