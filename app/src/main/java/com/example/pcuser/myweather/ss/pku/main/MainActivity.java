@@ -15,8 +15,12 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.baidu.location.BDLocation;
+import com.baidu.location.BDLocationListener;
 import com.example.pcuser.myweather.R;
 import com.example.pcuser.myweather.ss.pku.cityList.CityListActivity;
+import com.example.pcuser.myweather.ss.pku.location.LocalCity;
+import com.example.pcuser.myweather.ss.pku.location.Location;
 import com.example.pcuser.myweather.ss.pku.parseWeatherData.parseWithXML.DayWeatherInformation;
 import com.example.pcuser.myweather.ss.pku.parseWeatherData.parseWithXML.ParseXMLWithPull;
 import com.example.pcuser.myweather.ss.pku.parseWeatherData.parseWithXML.TodayDetailInformation;
@@ -79,11 +83,13 @@ public class MainActivity extends Activity {
 
     private ImageView title_update_button;
 
-
     private ImageView pm25_pic;
     private ImageView weather_pic;
 
     private ProgressBar progressBar;
+
+    //定位图标
+    private ImageView location;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -183,19 +189,28 @@ public class MainActivity extends Activity {
                 progressBar.setVisibility(View.VISIBLE);
                 title_update_button.setVisibility(View.INVISIBLE);
                 downloadData.start();
-
             }
         });
 
         pm25_pic = (ImageView) findViewById(R.id.pm2_5_pic);
         weather_pic = (ImageView) findViewById(R.id.weather_pic);
+
+        /*lyp: start 定位*/
+        location = (ImageView) findViewById(R.id.title_location);
+        Location.init(this, new MyLocationListener());
+        location.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Location.startLocating();
+            }
+        });
+        /*lyp: end of 定位*/
     }
 
     @Override
     protected void onStart() {
         super.onStart();
         Log.v("mainActivity", "onStart()");
-
     }
 
     @Override
@@ -214,6 +229,8 @@ public class MainActivity extends Activity {
     protected void onStop() {
         super.onStop();
         Log.v("mainActivity", "onStop()");
+        //停止定位
+        Location.stopLocating();
     }
 
     @Override
@@ -297,7 +314,6 @@ public class MainActivity extends Activity {
         Log.v("mainActivity", "onRestoreInstanceState");
 
     }
-
 
     private TodayDetailInformation todayDetailInformation;
     private DayWeatherInformation todayWeatherInformation;
@@ -444,4 +460,21 @@ public class MainActivity extends Activity {
 
         }
     }
+
+
+    /**
+     * Created by lyp on 2015/5/15.
+     * 实现定位回调监听
+     */
+    private class MyLocationListener implements BDLocationListener {
+        @Override
+        public void onReceiveLocation(BDLocation location) {
+            String cityID = LocalCity.getCityIdByName(LocalCity.getLocalCityName(location));
+            Log.d("location", "locate finish ");
+            Log.d("City ID", cityID);
+            DownloadWeatherInformationByXML downloadData = new DownloadWeatherInformationByXML(cityID);
+            downloadData.start();
+        }
+    }
 }
+
