@@ -36,5 +36,11 @@ public class CityBean {
         return this.allFirstPY;
     }
 
+    public String getNumber() {
+        return number;
+    }
 
+    public String getFirstPY() {
+        return firstPY;
+    }
 }

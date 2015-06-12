@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.pcuser.myweather">
+    package="com.example.pcuser.myweather" >
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -15,19 +15,20 @@
     <uses-permission android:name="android.permission.ACCESS_GPS" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_LOGS" />
-    <!-- lyp: end of 定位功能 -->
 
+    <!-- lyp: end of 定位功能 -->
     <application
         android:name=".ss.pku.MyApplication"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme" >
 
         <!-- lyp: start 定位功能 -->
         <meta-data
             android:name="com.baidu.lbsapi.API_KEY"
             android:value="rd05ZNPYvalFIsjTA5BzViDY" />
+
         <service
             android:name="com.baidu.location.f"
             android:enabled="true"
@@ -36,16 +37,27 @@
 
         <activity
             android:name=".ss.pku.main.MainActivity"
-            android:label="@string/app_name">
+            android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".ss.pku.main.CityListActivity">
+
+        </activity>
+
+        <service
+            android:name=".ss.pku.main.GetWeatherService"
+            android:enabled="true"
+            android:exported="true" >
+        </service>
+
         <activity
-            android:name=".ss.pku.cityList.CityListActivity"
-            android:label="@string/title_activity_city_list"></activity>
+            android:name=".ss.pku.main.MainCityActivity"
+            android:label="@string/title_activity_main_city" >
+        </activity>
     </application>
 
 </manifest>

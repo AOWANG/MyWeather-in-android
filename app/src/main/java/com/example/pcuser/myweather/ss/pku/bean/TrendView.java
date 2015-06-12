@@ -1,5 +1,6 @@
 package com.example.pcuser.myweather.ss.pku.bean;
 
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -12,18 +13,15 @@ import android.graphics.Paint.Style;
 import android.util.AttributeSet;
 import android.view.View;
 
-import com.example.pcuser.myweather.ss.pku.util.Constants;
-import com.example.pcuser.myweather.ss.pku.util.WeatherPic;
 
-import java.lang.Integer;import java.lang.Override;
+
+
+import java.lang.Integer;
+import java.lang.Override;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * ������������ͼ
- *
- *
- */
+
 public class TrendView extends View {
 
 	private Paint mPointPaint;
@@ -116,8 +114,8 @@ public class TrendView extends View {
             //动态获取drawable中的图片
             String imgName1="d"+topList.get(i);
             String imgName2="n"+topList.get(i);
-            int imgId1 = getResources().getIdentifier(imgName1, "drawable", "com.example.pcuser.myweather.ss.pku.bean;");
-            int imgId2 = getResources().getIdentifier(imgName2, "drawable", "com.example.pcuser.myweather.ss.pku.bean;");
+            int imgId1 = getResources().getIdentifier(imgName1, "drawable", "com.example.pcuser.myweather");
+            int imgId2 = getResources().getIdentifier(imgName2, "drawable", "com.example.pcuser.myweather");
             topBmps[i]= BitmapFactory.decodeResource(c.getResources(), imgId1);
             lowBmps[i]= BitmapFactory.decodeResource(c.getResources(), imgId2);
         }
@@ -130,12 +128,12 @@ public class TrendView extends View {
 		int temspace = 8;
 		
 		FontMetrics fontMetrics = mTextPaint.getFontMetrics();
-		// �������ָ߶�  
+
 		float fontHeight = fontMetrics.bottom - fontMetrics.top;  
 		
 		int h = this.h/2;
 		int h2 = (int) (h - fontHeight/2);
-		int h3 = (int) (h - fontHeight - Constants.picSize);
+		int h3 = (int) (h - fontHeight-70);
 		 
 		int h4 = (int) (h + fontHeight);
 		int h5 = (int) (h + fontHeight);
@@ -149,7 +147,10 @@ public class TrendView extends View {
 				}
 				canvas.drawText(topTem.get(i) + "°C", x[i], h2 + space, mTextPaint);
 				canvas.drawCircle(x[i], h + space, radius, mPointPaint);
-				canvas.drawBitmap(topBmps[i], x[i]-topBmps[i].getWidth()/2, h3 + space, null);
+
+
+                Bitmap thisBitMap= Bitmap.createScaledBitmap(topBmps[i], 60, 60, false);
+				canvas.drawBitmap(thisBitMap , x[i]-thisBitMap.getWidth()/2, h3 + space, null);
 			}
 		}
 
@@ -161,7 +162,8 @@ public class TrendView extends View {
 			} 
 			canvas.drawText(lowTem.get(i) + "°C", x[i], h4 + space, mTextPaint);
 			canvas.drawCircle(x[i], h + space, radius, mPointPaint);
-			canvas.drawBitmap(lowBmps[i], x[i]-lowBmps[i].getWidth()/2, h5 + space, null);
+            Bitmap thisBitMap= Bitmap.createScaledBitmap(lowBmps[i], 60, 60, false);
+			canvas.drawBitmap(thisBitMap, x[i]-thisBitMap.getWidth()/2, h5 + space, null);
 		}
 	}
 

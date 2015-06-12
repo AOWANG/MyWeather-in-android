@@ -68,6 +68,7 @@
     </RelativeLayout>
 
     <RelativeLayout
+
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/title"
@@ -237,5 +238,17 @@
                 android:layout_alignParentLeft="true" />
         </RelativeLayout>
     </RelativeLayout>
+    <RelativeLayout
+        android:paddingTop="300dp"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+        <com.example.pcuser.myweather.ss.pku.bean.TrendView
+            android:paddingTop="200dp"
+            android:id="@+id/trendView"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" >
+        </com.example.pcuser.myweather.ss.pku.bean.TrendView>
+    </RelativeLayout>
+
 
 </RelativeLayout>

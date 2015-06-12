@@ -19,7 +19,6 @@
     <string name="default_today_wind_power">微风</string>
     <string name="default_title_name">当前城市：北京</string>
     <string name="search_editText">北京/beijing/bj</string>
-
     <string name="title_city_name">天气</string>
     <string name="issue_time">发布</string>
     <string name="humidity">湿度：</string>
@@ -35,9 +34,10 @@
     <string name="friday">五</string>
     <string name="saturday">六</string>
     <string name="sunday">日</string>
-
     <string name="no_data">无数据</string>
     <string name="no_weather_info">没有此城市的天气信息</string>
     <string name="no_network">无法连接到网络。</string>
     <string name="no_picture">没有此天气的相关图.</string>
+    <string name="title_activity_main_city">MainCityActivity</string>
+
 </resources>

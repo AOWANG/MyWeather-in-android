@@ -14,57 +14,41 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.ServiceConnection;
+import android.os.IBinder;
+
+import com.example.pcuser.myweather.ss.pku.MyApplication;
+import com.example.pcuser.myweather.ss.pku.bean.TrendView;
+import com.example.pcuser.myweather.ss.pku.parseWeatherData.JsonParse;
+import com.example.pcuser.myweather.ss.pku.util.NetUtil;
+import com.example.pcuser.myweather.ss.pku.util.PinYinUtil;
+
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.example.pcuser.myweather.R;
-import com.example.pcuser.myweather.ss.pku.cityList.CityListActivity;
 import com.example.pcuser.myweather.ss.pku.location.LocalCity;
 import com.example.pcuser.myweather.ss.pku.location.Location;
-import com.example.pcuser.myweather.ss.pku.parseWeatherData.parseWithXML.DayWeatherInformation;
-import com.example.pcuser.myweather.ss.pku.parseWeatherData.parseWithXML.ParseXMLWithPull;
-import com.example.pcuser.myweather.ss.pku.parseWeatherData.parseWithXML.TodayDetailInformation;
-import com.example.pcuser.myweather.ss.pku.util.DateMethodUtil;
-import com.example.pcuser.myweather.ss.pku.util.NetUtil;
-import com.example.pcuser.myweather.ss.pku.util.PinYinUtil;
+import com.example.pcuser.myweather.ss.pku.bean.CityInfoBean;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.reflect.Field;
-import java.net.HttpURLConnection;
-import java.net.URL;
 
 public class MainActivity extends Activity {
     private static final int MSG_UPDATE_WEATHER_WITH_XML = 1;
     private static final int MSG_FAILURE = 0;
 
-    private Handler handler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            progressBar.setVisibility(View.INVISIBLE);
-            title_update_button.setVisibility(View.VISIBLE);
-            switch (msg.what) {
-                case MSG_UPDATE_WEATHER_WITH_XML:
-                    Log.e("myWeather", "update UI weather interface with xml");
-
-                    if (ParseXMLWithPull.parseWeatherInformation(msg.obj.toString())) {
-                        UpdateWeatherUIByXMLInformation();
-                    } else {
-                        Toast.makeText(MainActivity.this, getString(R.string.no_weather_info), Toast.LENGTH_SHORT).show();
-                    }
-
-                    break;
-                case MSG_FAILURE:
-                    Log.e("myWeather", "failure");
-                    Toast.makeText(MainActivity.this, getString(R.string.no_network), Toast.LENGTH_LONG).show();
-                    break;
-
-                default:
-                    Log.e("myWeather", "default");
-            }
-        }
-    };
+    GetWeatherService serviceBinder;
+    Intent i;
+    boolean lack_weatherinfo=false;//获得cityInfoBean数据是否完整的标记
+    private String mCityNumber;//current city ID
+    private CityInfoBean mCityInfoBean;
+    private TrendView sevenWeatherView;//七天折线图
 
     private TextView city_name;
     private TextView currentWendu;
@@ -91,43 +75,76 @@ public class MainActivity extends Activity {
     //定位图标
     private ImageView location;
 
+    private ServiceConnection connection = new ServiceConnection() {
+        public void onServiceConnected(
+                ComponentName className, IBinder service) {
+            //—-called when the connection is made—-
+            serviceBinder = ((GetWeatherService.MyBinder)service).getService();
+            serviceBinder.cityNumber= mCityNumber;
+            startService(i);
+        }
+        public void onServiceDisconnected(ComponentName className) {
+            //---called when the service disconnects---
+            serviceBinder = null;
+        }
+    };
+
+    //绑定service，并获取城市天气数据
+    public CityInfoBean getWeatherFromService() {
+        i = new Intent(MainActivity.this, GetWeatherService.class);
+        bindService(i, connection, Context.BIND_AUTO_CREATE);
+        return JsonParse.getCityInfo(mCityNumber);
+    }
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.weather_info);
         Log.d("myWeather", "onCreate");
 
-        getControls();
+        getControls();//给控件绑定句柄
         getScreenMetrics();
-
-        updateUIByLocalData();
+        updateUIByLocalData();//更新上次更新的城市信息并显示
 
 
         if (NetUtil.getNetConnectionState(MainActivity.this) == NetUtil.NET_CONNECTION_NONE) {
             Toast.makeText(MainActivity.this, getString(R.string.no_network), Toast.LENGTH_SHORT).show();
             return;
         }
-
+        // 绑定services
+        i = new Intent(MainActivity.this, GetWeatherService.class);
+        bindService(i, connection, Context.BIND_AUTO_CREATE);
+        //从主城市Activity 或者 城市列表的Activity 传回城市名和ID
         Intent intent = this.getIntent();
-        String cityID = intent.getStringExtra("cityID");
+        String cityName=intent.getStringExtra("cityName");
+        String cityNumber = intent.getStringExtra("cityNumber");
+        mCityNumber=cityNumber;
         //更新数据
-        if (cityID != null) {
+        if (cityNumber!= null) {
             SharedPreferences settings = (SharedPreferences) getSharedPreferences("localWeatherInformation", MODE_PRIVATE);
             SharedPreferences.Editor editor = settings.edit();
-            editor.putString("cityID", cityID);
+            editor.putString("cityNumber", cityNumber);
             editor.commit();
-
-            DownloadWeatherInformationByXML downloadWeatherInformationByXML = new DownloadWeatherInformationByXML(cityID);
-
+            mCityNumber=cityNumber;
+            //从service获得天气数据存入mCityInfoBean中
+            mCityInfoBean= JsonParse.getCityInfo(mCityNumber);
+            if(mCityInfoBean==null) return;
             progressBar.setVisibility(View.VISIBLE);
             title_update_button.setVisibility(View.INVISIBLE);
-            downloadWeatherInformationByXML.start();
+
+            MyApplication.addMainCity(cityName,cityNumber);
+
+            //更新所有控件的内容
+            updateAllViews();
+
         } else {
-            DownloadWeatherInformationByXML downloadWeatherInformationByXML = new DownloadWeatherInformationByXML();
             progressBar.setVisibility(View.VISIBLE);
             title_update_button.setVisibility(View.INVISIBLE);
-            downloadWeatherInformationByXML.start();
         }
+
+
     }
 
     private void getScreenMetrics() {
@@ -173,7 +190,7 @@ public class MainActivity extends Activity {
         title_city_manager.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, CityListActivity.class);
+                Intent intent = new Intent(MainActivity.this, MainCityActivity.class);
                 //  Intent intent=new Intent(android.content.Intent.ACTION_DIAL, Uri.parse("tel://10086"));
                 intent.putExtra("cityName", city_name.getText().toString());
                 startActivity(intent);
@@ -184,11 +201,7 @@ public class MainActivity extends Activity {
         title_update_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //download information thread
-                DownloadWeatherInformationByXML downloadData = new DownloadWeatherInformationByXML();
-                progressBar.setVisibility(View.VISIBLE);
-                title_update_button.setVisibility(View.INVISIBLE);
-                downloadData.start();
+                mCityInfoBean=JsonParse.getCityInfo(mCityNumber);
             }
         });
 
@@ -205,6 +218,12 @@ public class MainActivity extends Activity {
             }
         });
         /*lyp: end of 定位*/
+
+        //七天数据图
+        int screenWidth  = getWindowManager().getDefaultDisplay().getWidth();
+        int screenHeight = getWindowManager().getDefaultDisplay().getHeight();
+        sevenWeatherView = (TrendView) findViewById(R.id.trendView);
+        sevenWeatherView.setWidthHeight(screenWidth, screenHeight);
     }
 
     @Override
@@ -242,6 +261,7 @@ public class MainActivity extends Activity {
         SharedPreferences.Editor editor = settings.edit();
 
         editor.putString("city", city_name.getText().toString());
+        editor.putString("cityID",mCityNumber);
         editor.putString("title_city_name", title_city_name.getText().toString());
         editor.putString("updateTime", issue_time.getText().toString());
         editor.putString("wendu", currentWendu.getText().toString());
@@ -254,12 +274,38 @@ public class MainActivity extends Activity {
         editor.putString("today_weather", today_weather.getText().toString());
         editor.putString("today_wind_power", today_wind_power.getText().toString());
 
+        //保存七天数据，在数据不缺失情况
+        if(lack_weatherinfo==false){
+            String topTempString="";
+            String lowTempString="";
+            String dayWeatherString="";
+            String nightWeatherString="";
+            if(mCityInfoBean!=null){
+                CityInfoBean.SevenWeather.Weather []sevenWeathers =mCityInfoBean.sevenWeather.weathers;
+                for(int i=0;i<7;++i){
+                    topTempString+=sevenWeathers[i].wendu1+",";
+                    lowTempString+=sevenWeathers[i].wendu2+",";
+                    dayWeatherString+=sevenWeathers[i].tianqi1.substring(0,2)+",";
+                    nightWeatherString+=sevenWeathers[i].tianqi2.substring(0,2)+",";
+                }
+            }
+
+            editor.putString("seven_topTemp",topTempString);
+            editor.putString("seven_lowTemp",lowTempString);
+            editor.putString("seven_dayWeather",dayWeatherString);
+            editor.putString("seven_nightWeather",nightWeatherString);
+        }
+
         editor.commit();
+        saveMainCities();
+
+
     }
 
     private void updateUIByLocalData() {
         SharedPreferences sharedPreferences = (SharedPreferences) getSharedPreferences("localWeatherInformation", MODE_PRIVATE);
         String city = sharedPreferences.getString("city", null);
+        String cityID=sharedPreferences.getString("cityID",null);
         String title_city_name1 = sharedPreferences.getString("title_city_name", null);
         String updateTime = sharedPreferences.getString("updateTime", null);
         String wendu = sharedPreferences.getString("wendu", null);
@@ -284,15 +330,21 @@ public class MainActivity extends Activity {
             today_temperature.setText(today_temperature1);
             today_weather.setText(today_weather1);
             today_wind_power.setText(today_wind_power1);
-
-            drawPicture(pm25, today_weather1, true);
         }
+        mCityNumber=cityID;
+        updateSevenDataByLocal();
+//
+
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         Log.v("mainActivity", "onDestroy()");
+        //存入设置城市
+        MyApplication myApplication=new MyApplication();
+        myApplication.saveMainCities();
+
     }
 
     @Override
@@ -315,150 +367,27 @@ public class MainActivity extends Activity {
 
     }
 
-    private TodayDetailInformation todayDetailInformation;
-    private DayWeatherInformation todayWeatherInformation;
 
-    private void UpdateWeatherUIByXMLInformation() {
+    //把主城市名和ID存入本地
+    public void  saveMainCities(){
+        //把城市名和ID分别串起来存成一个String，城市之间用“，”隔开。
+        List<String>mainCityNames =MyApplication.getMainCityName();
+        List<String>mainCityNumbers =MyApplication.getMainCityNUmber();
+        if(mainCityNames==null||mainCityNumbers==null) return;
+        SharedPreferences sharedPreferences=getSharedPreferences("mainCityNameANDNumber",MODE_PRIVATE);
+        SharedPreferences.Editor editor=sharedPreferences.edit();
+        String mainCityNameString="";
+        for(String item:mainCityNames){
 
-        todayDetailInformation = new TodayDetailInformation();
-        todayWeatherInformation = new DayWeatherInformation();
-
-        todayDetailInformation = ParseXMLWithPull.todayDetail;
-        if (todayDetailInformation.pm25 == null) {
-            todayDetailInformation.pm25 = "100";
-            todayDetailInformation.quality = getString(R.string.no_data);
+            mainCityNameString+=",";
         }
-        city_name.setText(todayDetailInformation.city);
-        currentWendu.setText(getString(R.string.today_temperature) + todayDetailInformation.wendu + "℃");
-        title_city_name.setText(todayDetailInformation.city + getString(R.string.title_city_name));
-        issue_time.setText(todayDetailInformation.updateTime + getString(R.string.issue_time));
-        humidity.setText(getString(R.string.humidity) + todayDetailInformation.shidu);
-        pm25_value.setText(todayDetailInformation.pm25);
-        air_quality.setText(todayDetailInformation.quality);
-
-        todayWeatherInformation = ParseXMLWithPull.weekWeatherInformation.get(0);
-
-        today_week_number.setText( DateMethodUtil.getTodayWeekNumber());
-
-        today_temperature.setText(todayWeatherInformation.getLow() + "~" + todayWeatherInformation.getHigh());
-        today_weather.setText(todayWeatherInformation.nightType);
-        today_wind_power.setText(todayWeatherInformation.getNightFengli());
-
-
-        drawPicture(todayDetailInformation.pm25.trim(), todayWeatherInformation.nightType, false);
-    }
-
-    private void drawPicture(String pm25, String weatherType, boolean isFromLocal) {
-
-        int pmValue = Integer.parseInt(pm25);
-        String pmImgStr = "0_50";
-        if (pmValue > 50 && pmValue < 201) {
-            int startV = (pmValue - 1) / 50 * 50 + 1;
-            int endV = ((pmValue - 1) / 50 + 1) * 50;
-            pmImgStr = Integer.toString(startV) + "_" + endV;
-        } else if (pmValue >= 201 && pmValue < 301) {
-            pmImgStr = "201_300";
-        } else if (pmValue >= 301) {
-            pmImgStr = "greater_300";
+        String mainCityNumberString="";
+        for(String item:mainCityNumbers){
+            mainCityNumberString+=",";
         }
-
-        String typeImg = "biz_plugin_weather_" + PinYinUtil.converterToSpell(weatherType);
-        Class aClass = R.drawable.class;
-        int typeId = -1;
-        int pmImgId = -1;
-        try {
-            //一般尽量采用这种形式
-            Field pmField = aClass.getField("biz_plugin_weather_" + pmImgStr);
-            Object pmImgO = pmField.get(new Integer(0));
-            pmImgId = (int) pmImgO;
-
-            Field field = aClass.getField(typeImg);
-            Object value = field.get(new Integer(0));
-            typeId = (int) value;
-
-            if (!isFromLocal)
-                Toast.makeText(MainActivity.this, getString(R.string.update_succeed), Toast.LENGTH_SHORT).show();
-        } catch (Exception e) { //e.printStackTrace();
-            if (-1 == typeId)
-                typeId = R.drawable.biz_plugin_weather_qing;
-            if (-1 == pmImgId)
-                pmImgId = R.drawable.biz_plugin_weather_0_50;
-            if (!isFromLocal)
-                Toast.makeText(MainActivity.this, getString(R.string.no_picture), Toast.LENGTH_SHORT).show();
-        } finally {
-            Drawable drawable = getResources().getDrawable(typeId);
-            weather_pic.setImageDrawable(drawable);
-            drawable = getResources().getDrawable(pmImgId);
-            pm25_pic.setImageDrawable(drawable);
-
-        }
-    }
-
-    private class DownloadWeatherInformationByXML extends Thread {
-        URL xmlUrl;
-
-        DownloadWeatherInformationByXML() {
-            try {
-                String preUrl = "http://wthrcdn.etouch.cn/WeatherApi?citykey=";
-                SharedPreferences sharedPreferences = (SharedPreferences) getSharedPreferences("localWeatherInformation", MODE_PRIVATE);
-                String cityID = sharedPreferences.getString("cityID", "101010200");
-                this.xmlUrl = new URL(preUrl + cityID);
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-        }
-
-        DownloadWeatherInformationByXML(String Url) {
-            try {
-                String preUrl = "http://wthrcdn.etouch.cn/WeatherApi?citykey=";
-                this.xmlUrl = new URL(preUrl + Url);
-            } catch (Exception exception) {
-                exception.printStackTrace();
-            }
-
-        }
-
-        @Override
-        public void run() {
-            super.run();
-            //user HttpURLConnection   get XML information
-            HttpURLConnection conn = null;
-            try {
-                conn = (HttpURLConnection) this.xmlUrl.openConnection();
-                conn.setRequestMethod("GET");
-                conn.setConnectTimeout(8000);
-                conn.setReadTimeout(8000);
-                InputStream inputStream = conn.getInputStream();
-                BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
-
-                StringBuilder response = new StringBuilder();
-                String str = "";
-                while ((str = br.readLine()) != null) {
-                    response.append(str);
-                }
-//                Log.e("myWeather",response.toString());
-                Message msg = new Message();
-                if (response != null) {
-                    msg.what = MSG_UPDATE_WEATHER_WITH_XML;
-                    msg.obj = response.toString();
-                    handler.sendMessage(msg);
-                } else {
-                    msg.what = MSG_FAILURE;
-                    msg.obj = null;
-                    handler.sendMessage(msg);
-                }
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                if (conn != null) {
-                    conn.disconnect();
-                }
-            }
-
-        }
+        editor.putString("mainCityNames",mainCityNameString);
+        editor.putString("mainCityNumbers",mainCityNameString);
+        editor.commit();
     }
 
 
@@ -472,9 +401,74 @@ public class MainActivity extends Activity {
             String cityID = LocalCity.getCityIdByName(LocalCity.getLocalCityName(location));
             Log.d("location", "locate finish ");
             Log.d("City ID", cityID);
-            DownloadWeatherInformationByXML downloadData = new DownloadWeatherInformationByXML(cityID);
-            downloadData.start();
+            mCityNumber=cityID;
+            getWeatherFromService();
+            updateAllViews();
         }
     }
+
+
+
+    //给折线图更新数据展示
+    public void updateSevenWeatherView(){
+        CityInfoBean.SevenWeather.Weather []sevenWeathers =mCityInfoBean.sevenWeather.weathers;
+        List<Integer> topTempList=new ArrayList<>();
+        List<Integer> lowTempList=new ArrayList<Integer>();
+        List<String>dayWeatherList=new ArrayList<String>();
+        List<String>nightWeatherList=new ArrayList<String>();
+        lack_weatherinfo=false;
+        for(int i=0;i<7;++i){
+            if(sevenWeathers[i].wendu1==null||sevenWeathers[i].wendu2==null||sevenWeathers[i].tianqi1==null||sevenWeathers[i].tianqi2==null){
+                updateSevenDataByLocal();
+                lack_weatherinfo=true;
+                return;
+            }
+            topTempList.add(Integer.valueOf(sevenWeathers[i].wendu1));
+            lowTempList.add(Integer.valueOf(sevenWeathers[i].wendu2));
+            dayWeatherList.add(sevenWeathers[i].tianqi1.substring(0,2));
+            nightWeatherList.add(sevenWeathers[i].tianqi2.substring(0,2));
+        }
+        sevenWeatherView.setTemperature(topTempList,lowTempList);
+        sevenWeatherView.setBitmap(dayWeatherList, nightWeatherList);
+    }
+    private void updateSevenDataByLocal(){
+        //从本地读出七天天气信息
+        SharedPreferences sharedPreferences= (SharedPreferences) getSharedPreferences("localWeatherInformation", MODE_PRIVATE);
+        String topTempString=sharedPreferences.getString("seven_topTemp",null);
+        String lowTempString=sharedPreferences.getString("seven_lowTemp",null);
+        String dayWeatherString=sharedPreferences.getString("seven_dayWeather",null);
+        String nightWeatherString=sharedPreferences.getString("seven_nightWeather",null);
+        if(topTempString==null||topTempString=="") return ;
+        List<String> topTempListString=new ArrayList<String>(Arrays.asList(topTempString.split(",")));
+        List<String> lowTempListString=new ArrayList<String >(Arrays.asList(lowTempString.split(",")));
+        List<String>dayWeatherList=new ArrayList<String>(Arrays.asList(dayWeatherString.split(",")));
+        List<String>nightWeatherList=new ArrayList<String>(Arrays.asList(nightWeatherString.split(",")));
+        List<Integer> topTempList=new ArrayList<Integer>() ;
+        List<Integer> lowTempList=new ArrayList<Integer>() ;
+        for(int i=0;i<7;++i){
+            topTempList.add(Integer.valueOf(topTempListString.get(i)));
+            lowTempList.add(Integer.valueOf(lowTempListString.get(i)));
+        }
+        sevenWeatherView.setTemperature(topTempList,lowTempList);
+        sevenWeatherView.setBitmap(dayWeatherList, nightWeatherList);
+    }
+
+    //更新所有控件内容
+    public void updateAllViews(){
+        if(mCityInfoBean==null) return;
+        title_city_name.setText(mCityInfoBean.cityInfo.cityName);
+        city_name.setText(mCityInfoBean.cityInfo.cityName);
+        issue_time.setText(mCityInfoBean.currentWeather.upTime);
+        currentWendu.setText(mCityInfoBean.currentWeather.wd);
+        humidity.setText(mCityInfoBean.currentWeather.sd);
+        pm25_value.setText(mCityInfoBean.pm25.aqi);
+        air_quality.setText(mCityInfoBean.pm25.quality);
+        //today_week_number.setText(mCityInfoBean.currentWeather.);
+        today_temperature.setText(mCityInfoBean.currentWeather.temp);
+        today_weather.setText(mCityInfoBean.sevenWeather.weathers[0].tianqi1);
+        today_wind_power.setText(mCityInfoBean.sevenWeather.weathers[0].fengli1);
+        updateSevenWeatherView();//更新折线图控件
+    }
+
 }
 
